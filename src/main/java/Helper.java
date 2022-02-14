@@ -1,12 +1,11 @@
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Main {
-    public static void main(String[] args) {
-        System.out.println(top10(Client.getAllTxn(679999)));
-    }
-
+public class Helper {
     public static List<String> top10(List<Transaction> txns) {
         Map<String, Transaction> graph = txns.stream().collect(Collectors.toMap(Transaction::getTxid, Function.identity()));
 
@@ -21,7 +20,7 @@ public class Main {
         PriorityQueue<Transaction> priorityQueue = new PriorityQueue<>(11,
                 Comparator.comparingInt(o -> o.ancestors.size()));
         for (Transaction txn : txns) {
-            func(txn);
+            traverse(txn);
             if (priorityQueue.size() < 10) {
                 priorityQueue.add(txn);
             } else {
@@ -34,13 +33,13 @@ public class Main {
         }).map(Transaction::getTxid).collect(Collectors.toList());
     }
 
-    public static void func(Transaction txn) {
+    public static void traverse(Transaction txn) {
         if (txn.parents.isEmpty()) return;
 
         if (!txn.ancestors.isEmpty()) return;
 
         for (Transaction parentTxn : txn.parents) {
-            func(parentTxn);
+            traverse(parentTxn);
             txn.ancestors.addAll(parentTxn.ancestors);
             txn.ancestors.add(parentTxn);
         }

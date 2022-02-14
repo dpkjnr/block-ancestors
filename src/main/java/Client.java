@@ -7,7 +7,6 @@ import okhttp3.Response;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class Client {
@@ -18,10 +17,12 @@ public class Client {
         Request request = new Request.Builder().url("https://blockstream.info/api/blocks/" + blockHeight).build();
         try {
             Response response = client.newCall(request).execute();
+            if (!response.isSuccessful()) {
+                throw new RuntimeException("Fetching block details was not successful, error: " + response.body().string());
+            }
             return objectMapper.readValue(response.body().bytes(), new TypeReference<List<BlockDetail>>(){}).get(0);
         } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException("Error while fetching block details: " + e.getMessage());
         }
     }
 
@@ -34,11 +35,13 @@ public class Client {
             Response response;
             try {
                 response = client.newCall(request).execute();
+                if (!response.isSuccessful()) {
+                    throw new RuntimeException("Fetching txns with start index " + i + ", error: " + response.body().string());
+                }
                 allTxn.addAll(objectMapper.readValue(response.body().bytes(), new TypeReference<List<Transaction>>() {
                 }));
             } catch (IOException e) {
-                e.printStackTrace();
-                return Collections.emptyList();
+                throw new RuntimeException("Error while fetching txns with start index: " + i + ", error: " + e.getMessage());
             }
         }
         return allTxn;
